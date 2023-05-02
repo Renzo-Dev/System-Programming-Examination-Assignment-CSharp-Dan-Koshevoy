@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace System_Programming_Examination_Assignment;
-
-internal static class Program
+namespace System_Programming_Examination_Assignment
 {
-    /// <summary>
-    ///     Главная точка входа для приложения.
-    /// </summary>
-    [STAThread]
-    private static void Main()
+
+    internal static class Program
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new MainForm());
+        /// <summary>
+        ///     Главная точка входа для приложения.
+        /// </summary>
+        [STAThread]
+        private static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
+        }
     }
 }

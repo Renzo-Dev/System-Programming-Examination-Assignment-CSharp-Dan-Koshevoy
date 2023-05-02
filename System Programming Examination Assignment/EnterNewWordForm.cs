@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace System_Programming_Examination_Assignment;
-
-public partial class EnterNewWordForm : Form
+namespace System_Programming_Examination_Assignment
 {
-    public EnterNewWordForm()
-    {
-        InitializeComponent();
-    }
 
-    private void bAddNewWord_Click(object sender, EventArgs e)
+    public partial class EnterNewWordForm : Form
     {
-        if (tbEnterWord.Text.Length > 0) Close();
+        public EnterNewWordForm()
+        {
+            InitializeComponent();
+        }
+
+        private void bAddNewWord_Click(object sender, EventArgs e)
+        {
+            if (tbEnterWord.Text.Length > 0) Close();
+        }
     }
 }
