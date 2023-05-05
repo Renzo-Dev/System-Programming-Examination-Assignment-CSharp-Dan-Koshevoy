@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Management.Instrumentation;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -129,7 +131,7 @@ namespace System_Programming_Examination_Assignment
                     Close();
                 }
 
-                // узнаем количество дисков и инф про них
+                // получаем количество дисков и инф про них
                // foreach (var drive in DriveInfo.GetDrives()) _drives.Add(new Drive(drive.Name));
                _drives.Add(new Drive("D:\\"));
             }
@@ -179,7 +181,6 @@ namespace System_Programming_Examination_Assignment
                         pgbFindWords.Style = ProgressBarStyle.Blocks;
                     });
 
-                int cThreads = _threads.Count;
                 try
                 {
                     // начинаем поиск запретных слов ( по одному потоку на каждый диск )
@@ -187,7 +188,7 @@ namespace System_Programming_Examination_Assignment
                     {
                         // создаем поток для поиска текстовых файлов в каждом диске ( 1 поток = 1 диску )
                         var i1 = i;
-                        _threads[i] = new Thread(() => Test(_drives[i1]));
+                        _threads[i] = new Thread(() => FindTextFiles(_drives[i1]));
                         _threads[i].Start();
                     }
 
@@ -203,7 +204,7 @@ namespace System_Programming_Examination_Assignment
             }
         }
 
-        private void Test(Drive drive)
+        private void FindTextFiles(Drive drive)
         {
             mutex.WaitOne();
             int cThreads = _threads.Count;
@@ -231,12 +232,12 @@ namespace System_Programming_Examination_Assignment
                                 var index1 = ind;
                                 // создаем поток в объекте drive ( тома )
                                 drive._threads.Add(new Thread(() =>
-                                    FindWord(drive.FilesPaths[index1])));
+                                    FindWordsInFile(drive.FilesPaths[index1])));
                                 drive._threads.Last().Start();
                             }
                             else
                             {
-                                FindWord(drive.FilesPaths[ind]);
+                                FindWordsInFile(drive.FilesPaths[ind]);
                             }
                         }
                     }));
@@ -259,12 +260,12 @@ namespace System_Programming_Examination_Assignment
                                 var index1 = ind;
                                 // создаем поток в объекте drive ( тома )
                                 drive._threads.Add(new Thread(() =>
-                                    FindWord(drive.FilesPaths[index1])));
+                                    FindWordsInFile(drive.FilesPaths[index1])));
                                 drive._threads.Last().Start();
                             }
                             else
                             {
-                                FindWord(drive.FilesPaths[ind]);
+                                FindWordsInFile(drive.FilesPaths[ind]);
                             }
                         }
                     }));
@@ -286,12 +287,12 @@ namespace System_Programming_Examination_Assignment
                                 var index1 = ind;
                                 // создаем поток в объекте drive ( тома )
                                 drive._threads.Add(new Thread(() =>
-                                    FindWord(drive.FilesPaths[index1])));
+                                    FindWordsInFile(drive.FilesPaths[index1])));
                                 drive._threads.Last().Start();
                             }
                             else
                             {
-                                FindWord(drive.FilesPaths[ind]);
+                                FindWordsInFile(drive.FilesPaths[ind]);
                             }
                         }
                     }));
@@ -301,59 +302,57 @@ namespace System_Programming_Examination_Assignment
             mutex.ReleaseMutex();
         }
 
-        private void FindWord(string filePath)
+        private async void FindWordsInFile(string filePath)
         {
-            bool state = false;
-            // поиск слова в файле
-
             // список всех слов из файла
-            string[] words = null;
+            string[] text = null;
             string fileContent;
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                fileContent = reader.ReadToEnd();
-                words = fileContent.Split(new char[]
-                {
-                    ' ', '(', ')', '/', '\\', ',', ';', ':', '[', ']', '}', '{',
-                    '\'',
-                    '\"', '!', '?', '.', '-', '\n', '\t'
-                });
-            }
+            bool status = false;
+            bool isOriginalCopy = false;
 
-            // проходим по списку запрещенных слов
-            foreach (string bWord in lbBannedWords.Items)
+            try
             {
-                // проходим по каждому слову из файла
-                foreach (var word in words)
+                FileInfo fileInfo = new FileInfo(filePath);
+                using (StreamReader reader = new StreamReader(filePath))
                 {
-                    // если запретно слово есть в файле
-                    if (bWord == word)
+                    fileContent = await reader.ReadToEndAsync();
+                    text = fileContent.Split(' ', '(', ')', '/', '\\', ',', ';', ':', '[', ']', '}', '{', '\'', '\"',
+                        '!', '?', '.', '-', '\n', '\t');
+                }
+
+                foreach (string bWord in lbBannedWords.Items)
+                {
+                    // если в файле есть запретное слово
+                    if (text.Contains(bWord))
                     {
-                        if (state != true)
+                        // создаем копию оригинального файла
+                        if (isOriginalCopy == false)
                         {
-                            // создаем копию файла без замены текста
-
+                            isOriginalCopy = true;
+                            File.Copy(filePath, $"Copy {fileInfo.Name}", true);
                         }
-                        FileInfo fileInfo = new FileInfo(filePath);
+
                         // меняем запрещенное слово на звездочки
                         fileContent = fileContent.Replace(bWord, "*******");
-
-                        state = true;
                     }
                 }
+
+                if (isOriginalCopy)
+                {
+                    using (StreamWriter writer = new StreamWriter($"Replace {fileInfo.Name}", false))
+                    {
+                        await writer.WriteLineAsync(fileContent);
+                    }
+                }
+
+                if (pgbFindWords.InvokeRequired)
+                {
+                    pgbFindWords.BeginInvoke(new MethodInvoker(() => { pgbFindWords.PerformStep(); }));
+                }
             }
-
-            // если в файле было запрещенное слово
-            if (state)
+            catch
             {
-                // создаем копию файла с заменой текста
-
-
-            }
-
-            if (pgbFindWords.InvokeRequired)
-            {
-                pgbFindWords.BeginInvoke(new MethodInvoker(() => { pgbFindWords.PerformStep(); }));
+                //
             }
         }
 
@@ -363,6 +362,7 @@ namespace System_Programming_Examination_Assignment
         {
             if (_listWords.Count > 0)
             {
+                gbParamFound.Enabled = false;
                 pgbFindWords.Style = ProgressBarStyle.Marquee;
                 bStart.Enabled = false;
                 bAddNewWord.Enabled = false;
@@ -469,7 +469,7 @@ namespace System_Programming_Examination_Assignment
                     drive._threads.Clear();
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 //
             }
@@ -552,6 +552,10 @@ namespace System_Programming_Examination_Assignment
                     _threads.Clear();
 
                     _threadsAborteds = true;
+                    if (gbParamFound.InvokeRequired)
+                    {
+                        gbParamFound.BeginInvoke(new Action(() => { gbParamFound.Enabled = true; }));
+                    }
                 }
                 catch (Exception ex)
                 {

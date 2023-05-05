@@ -213,6 +213,7 @@ namespace System_Programming_Examination_Assignment
             this.pgbFindWords.MarqueeAnimationSpeed = 30;
             this.pgbFindWords.Name = "pgbFindWords";
             this.pgbFindWords.Size = new System.Drawing.Size(294, 19);
+            this.pgbFindWords.Step = 4;
             this.pgbFindWords.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.pgbFindWords.TabIndex = 9;
             // 
