@@ -67,6 +67,7 @@ namespace System_Programming_Examination_Assignment
                                     }));
                             });
                         lCountWords.Text = $@"Слов: {lbBannedWords.Items.Count}";
+                        bStart.Enabled = true;
                     }
             }
             catch (Exception ex)
@@ -129,8 +130,8 @@ namespace System_Programming_Examination_Assignment
                 }
 
                 // получаем количество дисков и инф про них
-                foreach (var drive in DriveInfo.GetDrives()) _drives.Add(new Drive(drive.Name));
-                // _drives.Add(new Drive("D:\\"));
+                //foreach (var drive in DriveInfo.GetDrives()) _drives.Add(new Drive(drive.Name));
+                _drives.Add(new Drive("D:\\"));
             }
             catch
             {
@@ -298,6 +299,7 @@ namespace System_Programming_Examination_Assignment
                     _threads[j].Start();
                 }
             }
+
             mutex.ReleaseMutex();
         }
 
@@ -354,8 +356,6 @@ namespace System_Programming_Examination_Assignment
                 //
             }
         }
-
-
 
         private async void bStart_Click(object sender, EventArgs e)
         {
@@ -566,24 +566,30 @@ namespace System_Programming_Examination_Assignment
                 {
                     MessageBox.Show(ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action( async () =>
+                    {
+                        _countFiles = 0;
+                        lCountFiles.Text = _countFiles.ToString();
+
+                        lStatusScanning.ForeColor = Color.Goldenrod;
+                        lStatusScanning.Text = @"Поиск текстовых файлов";
+
+                        MinimumSize = new Size(257, 522);
+
+                        int kef = 7;
+                        // меняем размер окна
+                        for (; Width > MinimumSize.Width;)
+                        {
+                            await Task.Delay(1);
+                            Width -= (MaximumSize.Width - Width) / kef + 1;
+                            Location = new Point(Location.X + ((MaximumSize.Width - Width) / kef - 3) / 2, Location.Y);
+                        }
+                    }));
+                }
             });
-
-            _countFiles = 0;
-            lCountFiles.Text = _countFiles.ToString();
-
-            lStatusScanning.ForeColor = Color.Goldenrod;
-            lStatusScanning.Text = @"Поиск текстовых файлов";
-
-            MinimumSize = new Size(257, 522);
-
-            int kef = 7;
-            // меняем размер окна
-            for (; Width > MinimumSize.Width;)
-            {
-                await Task.Delay(1);
-                Width -= (MaximumSize.Width - Width) / kef + 1;
-                Location = new Point(Location.X + ((MaximumSize.Width - Width) / kef - 3) / 2, Location.Y);
-            }
 
             if (bPauseResume.Text.Equals("Возобновить")) bPauseResume.Text = @"Пауза";
             bStart.Enabled = true;
@@ -591,6 +597,7 @@ namespace System_Programming_Examination_Assignment
             bFileLoadWords.Enabled = true;
             panelInformation.Visible = false;
             panelInformation.Enabled = false;
+
         }
     }
 
