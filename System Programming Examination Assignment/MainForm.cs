@@ -4,9 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Management.Instrumentation;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -41,7 +38,7 @@ namespace System_Programming_Examination_Assignment
                 if (_listWords.Count == 0)
                 {
                     bStart.Enabled = false;
-                } 
+                }
             }
         }
 
@@ -132,8 +129,8 @@ namespace System_Programming_Examination_Assignment
                 }
 
                 // получаем количество дисков и инф про них
-               // foreach (var drive in DriveInfo.GetDrives()) _drives.Add(new Drive(drive.Name));
-               _drives.Add(new Drive("D:\\"));
+                foreach (var drive in DriveInfo.GetDrives()) _drives.Add(new Drive(drive.Name));
+                // _drives.Add(new Drive("D:\\"));
             }
             catch
             {
@@ -164,6 +161,7 @@ namespace System_Programming_Examination_Assignment
             }
 
             // продолжить выполнение кода, если потоки завершили поиск , и при этом не было нажато кнопка отмены
+            Thread.Sleep(500);
             if (_threadsAborteds == false)
             {
                 // меняем статус на [поиск запретных слов]
@@ -196,6 +194,7 @@ namespace System_Programming_Examination_Assignment
                     {
                         _threads[i].Join();
                     }
+
                 }
                 catch
                 {
@@ -227,7 +226,7 @@ namespace System_Programming_Examination_Assignment
                             fileInfo = new FileInfo(drive.FilesPaths[ind]);
 
                             // если 
-                            if (fileInfo.Length > 1000000)
+                            if (fileInfo.Length > 10737418240)
                             {
                                 var index1 = ind;
                                 // создаем поток в объекте drive ( тома )
@@ -254,7 +253,7 @@ namespace System_Programming_Examination_Assignment
                             fileInfo = new FileInfo(drive.FilesPaths[ind]);
 
                             // если 
-                            if (fileInfo.Length > 1000000)
+                            if (fileInfo.Length > 10737418240)
                             {
                                 MessageBox.Show(fileInfo.DirectoryName);
                                 var index1 = ind;
@@ -281,7 +280,7 @@ namespace System_Programming_Examination_Assignment
                             var fileInfo = new FileInfo(drive.FilesPaths[ind]);
 
                             // если 
-                            if (fileInfo.Length > 1000000)
+                            if (fileInfo.Length > 10737418240)
                             {
                                 MessageBox.Show(fileInfo.DirectoryName);
                                 var index1 = ind;
@@ -447,6 +446,7 @@ namespace System_Programming_Examination_Assignment
                                 thread.Abort();
                             }
                         }
+
                 _threads.Clear();
                 foreach (var drive in _drives)
                 {
@@ -466,6 +466,7 @@ namespace System_Programming_Examination_Assignment
                                 }
                             }
                     }
+
                     drive._threads.Clear();
                 }
             }
@@ -516,6 +517,7 @@ namespace System_Programming_Examination_Assignment
                 try
                 {
                     foreach (var thread in _threads)
+                    {
                         if (thread.IsAlive)
                         {
                             if (thread.ThreadState == ThreadState.Suspended)
@@ -528,6 +530,7 @@ namespace System_Programming_Examination_Assignment
                                 thread.Abort();
                             }
                         }
+                    }
 
                     foreach (var drive in _drives)
                     {
@@ -547,8 +550,10 @@ namespace System_Programming_Examination_Assignment
                                 }
                             }
                         }
+
                         drive._threads.Clear();
                     }
+
                     _threads.Clear();
 
                     _threadsAborteds = true;
